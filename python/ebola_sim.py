@@ -9,7 +9,7 @@ from tqdm import tqdm
 import matplotlib
 import matplotlib.pyplot as plt
 import tensorflow as tf
-#tf.enable_eager_execution()
+tf.enable_eager_execution()
 
 # Read in ebola data
 ebola_sim = np.load("./data/ebola_sim.npy")
@@ -51,35 +51,46 @@ optmzr = keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 
 # Build the generator, accepts X and Z as inputs
 Hx = 100
-genx = keras.Sequential()
-genx.add(keras.layers.Dense(Hx, input_dim = P, activation = keras.activations.relu))
-genx.add(keras.layers.Dropout(rate = droprate))
+genx = tf.keras.Sequential()
+genx.add(tf.keras.layers.Dense(Hx, input_dim = P, activation = keras.activations.relu))
+genx.add(tf.keras.layers.Dropout(rate = droprate))
 #genx.add(keras.layers.Dense(Hx, activation = keras.activations.relu))
 #genx.add(keras.layers.Dropout(rate = droprate))
 
 Hz = 100
-genz = keras.Sequential()
-genz.add(keras.layers.Dense(Hz, input_dim = R, activation = keras.activations.relu))
-genz.add(keras.layers.Dropout(rate = droprate))
+genz = tf.keras.Sequential()
+genz.add(tf.keras.layers.Dense(Hz, input_dim = R, activation = keras.activations.relu))
+genz.add(tf.keras.layers.Dropout(rate = droprate))
 #genz.add(keras.layers.Dense(Hz, activation = keras.activations.relu))
 #genz.add(keras.layers.Dropout(rate = droprate))
 
-xdat = keras.layers.Input(shape = (P,))
-noise = keras.layers.Input(shape = (R,))
+#xdat = tf.keras.layers.Input(shape = (P,))
+#noise = tf.keras.layers.Input(shape = (R,))
+xdat = tf.Variable(np.random.normal(size=P).reshape([1,P]).astype(np.float32))
+noise = tf.Variable(np.random.normal(size=R).reshape([1,R]).astype(np.float32))
 
 proc_xdat = genx(xdat)
 proc_noise = genz(noise)
 
 Hxz = 256
-genxz = keras.Sequential()
-genxz.add(keras.layers.Dense(Hxz, input_dim = Hx + Hz))
-genxz.add(keras.layers.Dropout(rate = droprate))
+genxz = tf.keras.Sequential()
+genxz.add(tf.keras.layers.Dense(Hxz, input_dim = Hx + Hz))
+genxz.add(tf.keras.layers.Dropout(rate = droprate))
 #genxz.add(keras.layers.Dense(Hxz))
 #genxz.add(keras.layers.Dropout(rate = droprate))
-genxz.add(keras.layers.Dense(Q, activation = keras.activations.linear))
+genxz.add(tf.keras.layers.Dense(Q, activation = keras.activations.linear))
 
-xzin = keras.layers.concatenate([proc_xdat, proc_noise])
-genimg = genxz(xzin)
+# An example of double backprop
+with tf.GradientTape() as to:
+    with tf.GradientTape() as t:
+        xzin = keras.layers.concatenate([proc_xdat, proc_noise])
+        genimg = tf.reduce_sum(genxz(xzin))
+
+    a = t.gradient(genimg, genxz.trainable_variables)
+    b = 0
+    for i in range(len(a)):
+        b += tf.reduce_sum(tf.square(a[i]))
+c = to.gradient(b, genxz.trainable_variables)
 
 gen = keras.models.Model([xdat, noise], genimg)
 
