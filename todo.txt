@@ -1,0 +1,8 @@
+We could try:
+- Line search
+- Newton's Method
+- Small net
+- Truncated Newton's Method
+- My spicy quasi-newton method
+- Plain-old BFGS
+- Convex-nonconcave methods

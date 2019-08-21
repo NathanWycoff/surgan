@@ -1,3 +1,8 @@
 *.pdf
 *.swo
 *.swp
+*.hdf5
+./images/*
+*.csv
+*.tar.gz
+*.npy

@@ -1,0 +1,3 @@
+3 layer + H = 200
+
+can we prove that quantile  init is good using function space arguments + the fact that the set of measures with the correct quantiles is compact with convex combinations defined as mixture models?
