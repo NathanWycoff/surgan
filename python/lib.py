@@ -55,3 +55,7 @@ class PermanentDropout(tf.keras.layers.Dropout):
             noise_shape = self._get_noise_shape(x)
             x = tf.keras.backend.dropout(x, self.rate, noise_shape)
         return x
+
+def empty_constr(x, y, gendat):
+    N = y.shape[0]
+    return(tf.zeros([N,0]))
